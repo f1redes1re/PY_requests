@@ -2,11 +2,25 @@ from contextlib import contextmanager
 import datetime
 from sys import exc_info
 
-
 @contextmanager
 def loger(path):
     try:
         file = open(path, 'a', encoding='utf8')
+        a = datetime.datetime.now()
+        file.write(f'Приводится время лога запуска: {a}\n')
+        yield file
+    finally:
+        exc_type, exc_val, exc_tb = exc_info()
+        b = datetime.datetime.now()
+        file.write(f'{b}\n')
+        print(f'Разница времени между запуском и выходом из программы: {b - a}')
+        file.close()
+
+
+if __name__ == '__main__':
+    with loger(path='log2.txt') as log:
+        log.write('Приводится время лога выхода: ')
+
 
         documents = [
             {"type": "passport", "number": "2207 876234", "name": "Василий Гупкин"},
@@ -129,18 +143,3 @@ def loger(path):
                 return
 
         menu()
-
-        a = datetime.datetime.now()
-        file.write(f'Приводится время лога запуска: {a}\n')
-        yield file
-    finally:
-        exc_type, exc_val, exc_tb = exc_info()
-        b = datetime.datetime.now()
-        file.write(f'{b}\n')
-        print(f'Разница времени между запуском и выходом из программы: {b - a}')
-        file.close()
-
-
-if __name__ == '__main__':
-    with loger(path='log2.txt') as log:
-        log.write('Приводится время лога выхода: ')
