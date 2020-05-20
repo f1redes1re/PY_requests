@@ -25,10 +25,10 @@ class User:
             'https://api.vk.com/method/friends.get',
             params
         )
-        a1 = []
-        for a in response.json()['response']['items']:
-            a1.append(a)
-        return a1
+        friends_list = []
+        for friend in response.json()['response']['items']:
+            friends_list.append(friend)
+        return friends_list
 
     def get_users(self, u_ids):
         params = self.get_params()
@@ -38,38 +38,26 @@ class User:
             'https://api.vk.com/method/users.get',
             params
         )
-        a1 = []
-        for a in response.json()['response']:
+        users_list = []
+        for user in response.json()['response']:
             time.sleep(0.3)
-            a1.append(a)
-        return a1
+            users_list.append(user)
+        return users_list
 
     def get_group_info(self):
         params = self.get_params()
+        params['user_id'] = self.user_id
         params['extended'] = 1
         response = requests.get(
             'https://api.vk.com/method/groups.get',
             params
         )
-        a1 = []
-        for a in response.json()['response']['items']:
-            a1.append(a)
-        return a1
+        groups_list = []
+        for group in response.json()['response']['items']:
+            groups_list.append(group)
+        return groups_list
 
-    def get_group_members(self, g_id, u_ids):
-        params = self.get_params()
-        params['group_id'] = g_id
-        params['user_ids'] = str(u_ids)
-        response = requests.get(
-            'https://api.vk.com/method/groups.isMember',
-            params
-        )
-        a1 = []
-        for a in response.json()['response']:
-            a1.append(a['member'])
-        return sum(a1)
-
-    def get_group_friends(self, g_id):
+    def get_members(self, g_id):
         params = self.get_params()
         params['group_id'] = g_id
         response = requests.get(
@@ -78,42 +66,55 @@ class User:
         )
         return response.json()
 
+    def get_true_members(self, g_id, u_ids):
+        params = self.get_params()
+        params['group_id'] = g_id
+        params['user_ids'] = str(u_ids)
+        response = requests.get(
+            'https://api.vk.com/method/groups.isMember',
+            params
+        )
+        members_list = []
+        for member in response.json()['response']:
+            members_list.append(member['member'])
+        return sum(members_list)
+
 
 target_user = User(171691064)
 
-a = target_user.get_group_info()
-b = target_user.get_friends()
+group_info = target_user.get_group_info()
+friends_list = target_user.get_friends()
 
 with open('groups.json', 'w', encoding='utf-8') as f:
     file1 = []
     file2 = []
     file3 = 0
     file = [file1, file2]
-    for bbb in b:
-        if target_user.get_users(bbb) != 0:
+    for friend in friends_list:
+        if target_user.get_users(friend) != 0:
             try:
                 file3 += 1
-                if file3 == len(b):
-                    for aaa in a:
+                if file3 == len(friends_list):
+                    for target_group in group_info:
                         time.sleep(1)
-                        if target_user.get_group_members(aaa['id'], b) == 0:
+                        if target_user.get_true_members(target_group['id'], friends_list) == 0:
                             file1.append(
                                 {
-                                    "name": aaa['name'],
-                                    "gid": aaa['id'],
-                                    "members_count": target_user.get_group_friends(aaa['id'])['response']['count']
+                                    "name": target_group['name'],
+                                    "gid": target_group['id'],
+                                    "members_count": target_user.get_members(target_group['id'])['response']['count']
                                 }
                             )
-                        elif 0 < target_user.get_group_members(aaa['id'], b) < 1000:
+                        elif 0 < target_user.get_true_members(target_group['id'], friends_list) < 1000:
                             file2.append(
                                 {
-                                    "friends": target_user.get_group_members(aaa['id'], b),
-                                    "name": aaa['name'],
-                                    "gid": aaa['id'],
-                                    "members_count": target_user.get_group_friends(aaa['id'])['response']['count']
+                                    "friends": target_user.get_true_members(target_group['id'], friends_list),
+                                    "name": target_group['name'],
+                                    "gid": target_group['id'],
+                                    "members_count": target_user.get_members(target_group['id'])['response']['count']
                                 }
                             )
-                decimal = (file3/len(b))
+                decimal = (file3/len(friends_list))
                 print(f'{round(decimal*100, 3)} % completed')
             except KeyError as KE:
                 print(KE, 'KeyError')
