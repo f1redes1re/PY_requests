@@ -3,6 +3,7 @@
     <extensionMap>
       <mapping pattern="documents" type="PLAIN_TEXT" />
       <mapping pattern="directories" type="PLAIN_TEXT" />
+      <mapping ext="csv go to file  " type="PLAIN_TEXT" />
     </extensionMap>
   </component>
 </application>
